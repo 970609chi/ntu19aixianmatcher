@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>愛現大會．徵人公佈欄</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --board:#7c5c3e; --paper:#fbf6ea; --paper-alt:#f3ecd8; --ink:#2b241a; --ink-soft:#5c5344;
+    --line:rgba(43,36,26,.14); --pin:#b8b0a2;
+    --music:#c94b3f; --music-bg:#f3d7cf; --dance:#1f8a79; --dance-bg:#cfe9e2;
+    --drama:#6d4f99; --drama-bg:#e0d5ef; --other:#b9821f; --other-bg:#f2e2bd;
+    --gold:#c9971f; --gold-bg:#f6e7bd;
+    --shadow: 0 10px 24px rgba(30,20,8,.22);
+  }
+  :root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){ --board:#3c2c1d; --paper:#eee5d2; --paper-alt:#e6dabd; --ink:#241d13; } }
+  :root[data-theme="dark"]{ --board:#3c2c1d; --paper:#eee5d2; --paper-alt:#e6dabd; --ink:#241d13; }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 18% 22%, rgba(255,255,255,.05) 0, transparent 45%),
+      radial-gradient(circle at 82% 68%, rgba(0,0,0,.08) 0, transparent 50%),
+      repeating-linear-gradient(0deg, rgba(0,0,0,.035) 0px, rgba(0,0,0,.035) 1px, transparent 1px, transparent 3px),
+      repeating-linear-gradient(90deg, rgba(0,0,0,.03) 0px, rgba(0,0,0,.03) 1px, transparent 1px, transparent 3px),
+      var(--board);
+    min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+
+  .trial-banner{
+    display:none; position:sticky; top:0; z-index:45; background:var(--gold-bg); color:#5a4416;
+    font-size:.82rem; padding:9px 16px; text-align:center; border-bottom:1px solid rgba(90,68,22,.25);
+  }
+  .trial-banner b{ margin-right:4px; }
+  .trial-banner button{ font-family:inherit; border:none; background:#5a4416; color:#fff; padding:4px 12px; border-radius:999px; font-size:.76rem; font-weight:700; cursor:pointer; margin-left:8px; }
+
+  header{ padding:34px 20px 20px; text-align:center; }
+  .logo{ font-family:"Ma Shan Zheng",cursive; font-size:clamp(2.4rem,6vw,3.6rem); color:var(--paper); text-shadow:2px 3px 0 rgba(0,0,0,.25); line-height:1; margin:0; }
+  .tagline{ color:var(--paper); opacity:.82; font-size:.95rem; margin:10px auto 0; max-width:540px; line-height:1.7; }
+
+  .top-btn{
+    position:fixed; top:16px; z-index:40; background:var(--ink); color:var(--paper); border:none;
+    padding:9px 16px; border-radius:999px; font-size:.82rem; font-weight:700; cursor:pointer;
+    font-family:inherit; box-shadow:var(--shadow); transition:top .15s;
+  }
+  .top-btn:hover{ filter:brightness(1.15); }
+  #adminBtn{ right:16px; }
+  #subBtn{ left:16px; }
+
+  .filters{ max-width:960px; margin:0 auto; padding:0 20px 8px; display:flex; flex-direction:column; gap:10px; align-items:center; }
+  .chip-row{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .chip{ font-family:inherit; border:1.5px solid rgba(251,246,234,.55); background:transparent; color:var(--paper); padding:7px 15px; border-radius:999px; font-size:.85rem; font-weight:500; cursor:pointer; transition:background .15s,color .15s,transform .1s; }
+  .chip:hover{ transform:translateY(-1px); }
+  .chip.active{ background:var(--paper); color:var(--ink); border-color:var(--paper); font-weight:700; }
+  .chip.cat-active-音樂{ background:var(--music); border-color:var(--music); color:#fff; }
+  .chip.cat-active-舞蹈{ background:var(--dance); border-color:var(--dance); color:#fff; }
+  .chip.cat-active-戲劇{ background:var(--drama); border-color:var(--drama); color:#fff; }
+  .chip.cat-active-其他{ background:var(--other); border-color:var(--other); color:#fff; }
+  .chip.type-active-confirmed{ background:var(--gold); border-color:var(--gold); color:#fff; }
+
+  .board{ max-width:1180px; margin:26px auto 120px; padding:0 20px; columns:3 280px; column-gap:22px; }
+  @media (max-width:900px){ .board{ columns:2 260px; } }
+  @media (max-width:560px){ .board{ columns:1; padding:0 16px; } }
+
+  .card{ break-inside:avoid; background:var(--paper); border-radius:3px; padding:20px 18px 16px; margin:0 0 22px; box-shadow:var(--shadow); position:relative; display:block; }
+  .card:nth-child(3n+1){ transform:rotate(-1.1deg); background:var(--paper); }
+  .card:nth-child(3n+2){ transform:rotate(0.9deg); background:var(--paper-alt); }
+  .card:nth-child(3n){ transform:rotate(-0.4deg); background:var(--paper); }
+  .card:hover{ transform:rotate(0deg) scale(1.015); z-index:5; transition:transform .18s; }
+  .card.confirmed{ box-shadow:0 10px 24px rgba(30,20,8,.22), 0 0 0 2px var(--gold) inset; }
+
+  .pin{ position:absolute; top:-9px; left:50%; transform:translateX(-50%); width:15px; height:15px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #fff, var(--pin) 60%, #7a7264 100%); box-shadow:0 3px 4px rgba(0,0,0,.35); }
+  .tape{ position:absolute; top:4px; right:14px; font-size:.68rem; font-weight:700; padding:3px 9px; border-radius:3px; letter-spacing:.02em; }
+  .tape.音樂{ background:var(--music-bg); color:var(--music); }
+  .tape.舞蹈{ background:var(--dance-bg); color:var(--dance); }
+  .tape.戲劇{ background:var(--drama-bg); color:var(--drama); }
+  .tape.其他{ background:var(--other-bg); color:var(--other); }
+  .ribbon{ position:absolute; top:4px; left:14px; font-size:.68rem; font-weight:900; padding:3px 9px; border-radius:3px; background:var(--gold-bg); color:#7a5c0e; }
+  .kind-label{ display:inline-block; font-size:.7rem; font-weight:700; color:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:2px 9px; margin:14px 0 10px; }
+  .diff-tag{ display:inline-block; font-size:.7rem; font-weight:700; color:#7a5c0e; background:var(--gold-bg); border-radius:999px; padding:2px 9px; margin:14px 0 10px 6px; }
+  .card h3{ font-size:1.12rem; line-height:1.4; margin:0 0 8px; font-weight:900; padding-right:50px; }
+  .card .who{ font-size:.82rem; color:var(--ink-soft); margin-bottom:10px; }
+  .card .who b{ color:var(--ink); }
+  .tags{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+  .tag{ font-size:.75rem; background:rgba(43,36,26,.08); padding:3px 9px; border-radius:5px; color:var(--ink); }
+  .card p.desc{ font-size:.87rem; line-height:1.65; color:var(--ink); margin:0 0 12px; white-space:pre-wrap; }
+  .roster{ margin:0 0 12px; padding:0; list-style:none; }
+  .roster li{ font-size:.85rem; padding:4px 0; border-bottom:1px dashed var(--line); }
+  .roster li:last-child{ border-bottom:none; }
+  .card .contact{ font-size:.82rem; background:rgba(43,36,26,.06); border-radius:6px; padding:7px 10px; margin-bottom:10px; }
+  .card .foot{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; border-top:1px dashed var(--line); padding-top:8px; font-size:.72rem; color:var(--ink-soft); }
+  .card .foot .btns{ display:flex; gap:10px; }
+  .card .foot button{ font-family:inherit; border:none; background:none; color:var(--music); font-weight:700; cursor:pointer; font-size:.72rem; padding:2px 2px; }
+  .card .foot button.confirm{ color:var(--dance); }
+
+  .expand-btn{ font-family:inherit; border:none; background:none; color:var(--ink-soft); font-weight:700; font-size:.78rem; cursor:pointer; padding:2px 0 10px; text-decoration:underline; }
+  .expand-panel{ margin-bottom:2px; }
+
+  .comments-block{ margin-top:8px; }
+  .comments-toggle{ font-family:inherit; border:none; background:none; color:var(--ink-soft); font-weight:700; font-size:.78rem; cursor:pointer; padding:6px 0 0; }
+  .comments-panel{ margin-top:8px; background:rgba(43,36,26,.045); border-radius:8px; padding:10px; }
+  .comment-item{ font-size:.8rem; padding:5px 0; border-bottom:1px dashed var(--line); line-height:1.5; }
+  .comment-item:last-of-type{ border-bottom:none; }
+  .c-meta{ font-size:.68rem; color:var(--ink-soft); }
+  .c-empty{ font-size:.78rem; color:var(--ink-soft); padding:2px 0 6px; }
+  .comment-form{ display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+  .comment-form input{ flex:1; min-width:80px; font-family:inherit; font-size:.8rem; padding:7px 9px; border:1.5px solid var(--line); border-radius:7px; }
+  .comment-form button{ font-family:inherit; border:none; background:var(--music); color:#fff; padding:7px 13px; border-radius:7px; font-size:.8rem; font-weight:700; cursor:pointer; flex-shrink:0; }
+
+  .empty{ color:var(--paper); text-align:center; opacity:.85; padding:60px 20px; font-size:.95rem; line-height:1.8; }
+
+  .fab{ position:fixed; right:22px; bottom:22px; z-index:30; background:var(--music); color:#fff; border:none; border-radius:999px; padding:15px 22px; font-family:inherit; font-weight:900; font-size:.95rem; box-shadow:0 8px 20px rgba(0,0,0,.35); cursor:pointer; display:flex; align-items:center; gap:8px; }
+  .fab:hover{ filter:brightness(1.08); transform:translateY(-2px); }
+
+  .overlay{ position:fixed; inset:0; background:rgba(20,14,6,.55); z-index:50; display:flex; align-items:flex-end; justify-content:center; }
+  @media (min-width:640px){ .overlay{ align-items:center; padding:24px; } }
+  .sheet{ background:var(--paper); width:100%; max-width:540px; max-height:92vh; overflow-y:auto; border-radius:16px 16px 0 0; padding:24px 22px 30px; }
+  @media (min-width:640px){ .sheet{ border-radius:14px; } }
+  .sheet h2{ margin:0 0 4px; font-size:1.3rem; }
+  .sheet .sub{ font-size:.82rem; color:var(--ink-soft); margin-bottom:18px; }
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:.82rem; font-weight:700; margin-bottom:6px; }
+  .field input[type=text], .field input[type=email], .field textarea, .field select{
+    width:100%; font-family:inherit; font-size:.92rem; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:#fff; color:var(--ink);
+  }
+  .field textarea{ resize:vertical; min-height:70px; }
+  .checkrow{ display:flex; align-items:center; gap:8px; font-size:.86rem; }
+  .checkrow input{ width:16px; height:16px; }
+  .toggle-row{ display:flex; gap:8px; }
+  .toggle-row button{ flex:1; font-family:inherit; padding:10px; border-radius:8px; border:1.5px solid var(--line); background:#fff; font-weight:700; font-size:.88rem; cursor:pointer; color:var(--ink-soft); }
+  .toggle-row button.active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .cat-pick{ display:flex; gap:8px; flex-wrap:wrap; }
+  .cat-pick button{ font-family:inherit; border:1.5px solid var(--line); background:#fff; padding:7px 13px; border-radius:999px; font-size:.82rem; font-weight:600; cursor:pointer; }
+  .cat-pick button.on.音樂{ background:var(--music); border-color:var(--music); color:#fff; }
+  .cat-pick button.on.舞蹈{ background:var(--dance); border-color:var(--dance); color:#fff; }
+  .cat-pick button.on.戲劇{ background:var(--drama); border-color:var(--drama); color:#fff; }
+  .cat-pick button.on.其他{ background:var(--other); border-color:var(--other); color:#fff; }
+  .tagbox{ border:1.5px solid var(--line); border-radius:8px; padding:7px; display:flex; flex-wrap:wrap; gap:6px; background:#fff; }
+  .tagbox input{ border:none; outline:none; flex:1; min-width:90px; font-family:inherit; font-size:.85rem; padding:4px; }
+  .tagbox .tag{ background:rgba(43,36,26,.08); display:flex; align-items:center; gap:5px; }
+  .tagbox .tag button{ border:none; background:none; cursor:pointer; color:var(--ink-soft); font-size:.8rem; }
+  .hint{ font-size:.74rem; color:var(--ink-soft); margin-top:5px; }
+  .submit-btn{ width:100%; padding:13px; border:none; border-radius:10px; background:var(--music); color:#fff; font-family:inherit; font-weight:900; font-size:.98rem; cursor:pointer; margin-top:6px; }
+  .submit-btn.alt{ background:var(--dance); }
+  .submit-btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .close-x{ position:absolute; top:14px; right:16px; background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--ink-soft); }
+  .sheet-wrap{ position:relative; }
+  .err{ color:var(--music); font-size:.8rem; margin-top:6px; min-height:1em; }
+
+  .roster-row{ display:flex; gap:8px; margin-bottom:8px; align-items:center; }
+  .roster-row input{ flex:1; font-family:inherit; font-size:.85rem; padding:8px 10px; border:1.5px solid var(--line); border-radius:7px; }
+  .roster-row button{ border:none; background:none; color:var(--music); font-size:.9rem; cursor:pointer; }
+  .add-row-btn{ font-family:inherit; border:1.5px dashed var(--line); background:none; padding:8px; width:100%; border-radius:8px; font-size:.82rem; color:var(--ink-soft); cursor:pointer; margin-bottom:14px; }
+
+  .admin-overlay{ position:fixed; inset:0; background:var(--paper); z-index:60; overflow-y:auto; }
+  .admin-inner{ max-width:960px; margin:0 auto; padding:26px 20px 60px; }
+  .admin-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
+  .admin-head h2{ margin:0; font-size:1.4rem; }
+  .admin-head .head-btns{ display:flex; gap:8px; }
+  .admin-close{ background:var(--ink); color:var(--paper); border:none; padding:8px 16px; border-radius:999px; font-weight:700; font-family:inherit; cursor:pointer; }
+  .admin-logout{ background:none; color:var(--ink-soft); border:1px solid var(--line); padding:8px 14px; border-radius:999px; font-weight:700; font-family:inherit; cursor:pointer; font-size:.8rem; }
+  .stat-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin-bottom:22px; }
+  .stat-card{ background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px; }
+  .stat-card .n{ font-size:1.6rem; font-weight:900; }
+  .stat-card .l{ font-size:.75rem; color:var(--ink-soft); }
+  .bar-row{ display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:.8rem; }
+  .bar-row .label{ width:56px; flex-shrink:0; }
+  .bar-track{ flex:1; background:rgba(43,36,26,.08); border-radius:6px; height:10px; overflow:hidden; }
+  .bar-fill{ height:100%; border-radius:6px; }
+  .admin-table{ width:100%; border-collapse:collapse; font-size:.82rem; margin-top:10px; }
+  .admin-table th, .admin-table td{ text-align:left; padding:8px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .admin-table th{ color:var(--ink-soft); font-weight:700; font-size:.72rem; }
+  .del-btn{ border:none; background:none; color:var(--music); font-weight:700; cursor:pointer; font-size:.78rem; font-family:inherit; }
+  .scrollx{ overflow-x:auto; }
+  .section-title{ font-size:1rem; font-weight:900; margin:26px 0 8px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .mini-btn{ font-family:inherit; border:1.5px solid var(--line); background:#fff; padding:6px 12px; border-radius:999px; font-size:.76rem; font-weight:700; cursor:pointer; }
+  .mini-btn.warn{ border-color:var(--music); color:var(--music); }
+  .mini-btn.on{ background:var(--gold); border-color:var(--gold); color:#fff; }
+  .admin-box{ background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:10px; }
+  .admin-box p{ margin:0 0 8px; font-size:.85rem; line-height:1.6; }
+  .fb-item{ border-bottom:1px dashed var(--line); padding:8px 0; font-size:.83rem; }
+  .fb-item:last-child{ border-bottom:none; }
+  .fb-item .meta{ color:var(--ink-soft); font-size:.72rem; margin-top:2px; }
+
+  .toast{ position:fixed; left:50%; bottom:92px; transform:translate(-50%,14px); background:var(--ink); color:var(--paper); padding:10px 20px; border-radius:999px; font-size:.85rem; opacity:0; transition:opacity .25s, transform .25s; z-index:90; box-shadow:var(--shadow); pointer-events:none; max-width:88vw; text-align:center; }
+  .toast.show{ opacity:1; transform:translate(-50%,0); }
+</style>
+</head>
+<body>
+
+<div class="trial-banner" id="trialBanner">
+  <b>🧪 試用版</b>功能還在調整中，有任何想法歡迎留下反饋
+  <button id="fbOpenBtn">留下回饋</button>
+</div>
+
+<button class="top-btn" id="adminBtn">後台管理</button>
+<button class="top-btn" id="subBtn">🔔 訂閱通知</button>
+
+<header>
+  <h1 class="logo">愛現大會</h1>
+  <p class="tagline">還不認識也沒關係。缺樂手、缺舞者、缺演員，或是想毛遂自薦——都先貼上來，讓大家看見彼此。</p>
+</header>
+
+<div class="filters">
+  <div class="chip-row" id="typeFilter"></div>
+  <div class="chip-row" id="catFilter"></div>
+</div>
+
+<div class="board" id="board"></div>
+<div class="empty" id="emptyMsg" style="display:none;"></div>
+
+<button class="fab" id="fabBtn">＋ 我要張貼</button>
+
+<div id="modalRoot"></div>
+<div id="adminRoot"></div>
+<div id="confirmRoot"></div>
+
+<script>
+(function(){
+  const CATS = ['舞蹈','音樂','戲劇','其他'];
+  const CAT_COLOR = {舞蹈:'#1f8a79', 音樂:'#c94b3f', 戲劇:'#6d4f99', 其他:'#b9821f'};
+  const DIFFS = ['極易','易','普通','難','極難'];
+  const ADMIN_CODE = 'IB19secret';
+
+  let posts = [];
+  let subscribers = [];
+  let feedbacks = [];
+  let comments = [];
+  let trialMode = true;
+  let filterType = 'all';
+  let filterCat = 'all';
+  let db = null, userCap = null, downloadsCap = null, viewerId = null;
+  let adminUnlocked = false;
+
+  try{
+    viewerId = localStorage.getItem('ib19_viewer_id');
+    if(!viewerId){
+      viewerId = (window.crypto && typeof window.crypto.randomUUID === 'function')
+        ? window.crypto.randomUUID()
+        : 'u_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+      localStorage.setItem('ib19_viewer_id', viewerId);
+    }
+  }catch(e){
+    viewerId = 'u_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+  }
+
+  const expandedProfiles = new Set();
+  const expandedComments = new Set();
+  const draftCName = {};
+  const draftCText = {};
+
+  const boardEl = document.getElementById('board');
+  const emptyEl = document.getElementById('emptyMsg');
+  const typeFilterEl = document.getElementById('typeFilter');
+  const catFilterEl = document.getElementById('catFilter');
+  const adminBtn = document.getElementById('adminBtn');
+  const subBtn = document.getElementById('subBtn');
+  const trialBanner = document.getElementById('trialBanner');
+
+  try{ adminUnlocked = localStorage.getItem('ib19_admin_ok') === '1'; }catch(e){}
+
+  function timeAgo(ts){
+    const diff = Math.max(0, Date.now() - ts);
+    const m = Math.floor(diff/60000);
+    if(m < 1) return '剛剛';
+    if(m < 60) return m + ' 分鐘前';
+    const h = Math.floor(m/60);
+    if(h < 24) return h + ' 小時前';
+    const d = Math.floor(h/24);
+    if(d < 30) return d + ' 天前';
+    return new Date(ts).toLocaleDateString('zh-TW');
+  }
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function sanitizeId(s){
+    return String(s).trim().toLowerCase().replace(/[^a-z0-9_.~:@+-]/g,'_').slice(0,180) || 'anon';
+  }
+  function toCSV(headers, rows){
+    const esc = (v)=>{ v = v==null?'':String(v); if(/[",\n]/.test(v)){ v='"'+v.replace(/"/g,'""')+'"'; } return v; };
+    const lines = [headers.map(esc).join(',')];
+    rows.forEach(r=>lines.push(r.map(esc).join(',')));
+    return '\uFEFF' + lines.join('\r\n');
+  }
+  function exportCSV(filename, headers, rows){
+    try{
+      const blob = new Blob([toCSV(headers, rows)], {type:'text/csv;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }catch(e){
+      toast('目前無法匯出檔案');
+    }
+  }
+
+  // ---------- toast ----------
+  function toast(msg, ms){
+    ms = ms || 2200;
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(()=>t.classList.add('show'));
+    setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(), 300); }, ms);
+  }
+
+  // ---------- custom confirm (window.confirm is unreliable in sandboxed pages) ----------
+  function customConfirm(message){
+    return new Promise((resolve)=>{
+      const root = document.getElementById('confirmRoot');
+      root.innerHTML = `
+        <div class="overlay" id="cfOvl" style="z-index:75;">
+          <div class="sheet" style="max-width:380px;">
+            <div class="sheet-wrap">
+              <p style="font-size:.95rem; line-height:1.7; margin:6px 0 18px;">${escapeHtml(message)}</p>
+              <div style="display:flex; gap:10px;">
+                <button class="mini-btn" id="cfNo" style="flex:1; padding:11px;">取消</button>
+                <button class="submit-btn" id="cfYes" style="flex:1; margin-top:0;">確定</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      const done = (val)=>{ root.innerHTML=''; resolve(val); };
+      document.getElementById('cfYes').onclick = ()=>done(true);
+      document.getElementById('cfNo').onclick = ()=>done(false);
+      document.getElementById('cfOvl').addEventListener('click',(e)=>{ if(e.target.id==='cfOvl') done(false); });
+    });
+  }
+
+  function renderBanner(){
+    trialBanner.style.display = trialMode ? 'block' : 'none';
+    positionTopButtons();
+  }
+  function positionTopButtons(){
+    const h = trialBanner.style.display !== 'none' ? trialBanner.getBoundingClientRect().height : 0;
+    const top = h + 16;
+    adminBtn.style.top = top + 'px';
+    subBtn.style.top = top + 'px';
+  }
+  if(window.ResizeObserver){ new ResizeObserver(positionTopButtons).observe(trialBanner); }
+  else { window.addEventListener('resize', positionTopButtons); }
+
+  // ---------- filter chips ----------
+  function renderFilters(){
+    const typeChips = [
+      {k:'all', label:'全部'}, {k:'recruit', label:'找夥伴'},
+      {k:'profile', label:'秀自己'}, {k:'confirmed', label:'已成團'},
+    ];
+    typeFilterEl.innerHTML = typeChips.map(c=>{
+      const cls = filterType===c.k ? (c.k==='confirmed'?'active type-active-confirmed':'active') : '';
+      return `<button class="chip ${cls}" data-type="${c.k}">${c.label}</button>`;
+    }).join('');
+    typeFilterEl.querySelectorAll('button').forEach(b=>{
+      b.onclick = ()=>{ filterType = b.dataset.type; renderFilters(); renderBoard(); };
+    });
+
+    const catChips = [{k:'all', label:'全部類別'}].concat(CATS.map(c=>({k:c,label:c})));
+    catFilterEl.innerHTML = catChips.map(c=>{
+      const isActive = filterCat === c.k;
+      const cls = isActive && c.k!=='all' ? `active cat-active-${c.k}` : (isActive?'active':'');
+      return `<button class="chip ${cls}" data-cat="${c.k}">${c.label}</button>`;
+    }).join('');
+    catFilterEl.querySelectorAll('button').forEach(b=>{
+      b.onclick = ()=>{ filterCat = b.dataset.cat; renderFilters(); renderBoard(); };
+    });
+  }
+
+  // ---------- board ----------
+  function cardHtml(p){
+    const isMine = viewerId && p.authorId === viewerId;
+    const confirmed = p.status === 'confirmed';
+    const kindLabel = p.type === 'recruit' ? '找夥伴' : '秀自己';
+    const tagsHtml = (p.tags||[]).length ? `<div class="tags">${(p.tags||[]).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>` : '';
+    const rosterHtml = confirmed && (p.roster||[]).length
+      ? `<ul class="roster">${p.roster.map(r=>`<li>🎤 <b>${escapeHtml(r.role||'成員')}</b>：${escapeHtml(r.name||'')}</li>`).join('')}</ul>` : '';
+    const descTextRaw = confirmed && p.finalNote ? p.finalNote : p.description;
+    const descHtml = descTextRaw ? `<p class="desc">${escapeHtml(descTextRaw)}</p>` : '';
+
+    let bodyHtml;
+    if(p.type === 'profile' && !confirmed){
+      const open = expandedProfiles.has(p.id);
+      bodyHtml = `
+        <button class="expand-btn" data-expand="${p.id}">${open ? '▴ 收合細項' : '▾ 查看細項'}</button>
+        <div class="expand-panel" style="display:${open?'block':'none'};">${tagsHtml}${descHtml}</div>`;
+    } else {
+      bodyHtml = `${confirmed ? rosterHtml : tagsHtml}${descHtml}`;
+    }
+
+    const postComments = comments.filter(c=>c.postId===p.id).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+    const cOpen = expandedComments.has(p.id);
+    const commentsHtml = `
+      <div class="comments-block">
+        <button class="comments-toggle" data-ctoggle="${p.id}">💬 留言（${postComments.length}） ${cOpen?'▴':'▾'}</button>
+        <div class="comments-panel" style="display:${cOpen?'block':'none'};">
+          ${postComments.length ? postComments.map(c=>`<div class="comment-item"><b>${escapeHtml(c.name||'匿名')}</b>：${escapeHtml(c.text)}<div class="c-meta">${timeAgo(c.createdAt||0)}</div></div>`).join('') : '<div class="c-empty">還沒有留言，第一個留言吧！</div>'}
+          <div class="comment-form">
+            <input type="text" data-cname="${p.id}" placeholder="稱呼（選填）" value="${escapeHtml(draftCName[p.id]||'')}">
+            <input type="text" data-ctext="${p.id}" placeholder="留言…" value="${escapeHtml(draftCText[p.id]||'')}">
+            <button data-csend="${p.id}">送出</button>
+          </div>
+        </div>
+      </div>`;
+
+    return `
+      <div class="card ${confirmed?'confirmed':''}" data-id="${p.id}">
+        <div class="pin"></div>
+        <div class="tape ${p.category}">${p.category}</div>
+        ${confirmed ? `<div class="ribbon">🎉 已成團</div>` : ''}
+        <span class="kind-label">${kindLabel}</span>
+        ${p.difficulty ? `<span class="diff-tag">難度：${escapeHtml(p.difficulty)}</span>` : ''}
+        <h3>${escapeHtml(p.title)}</h3>
+        <div class="who">發起人：<b>${escapeHtml(p.name)}</b></div>
+        ${bodyHtml}
+        <div class="contact">📮 ${escapeHtml(p.contact)}</div>
+        ${commentsHtml}
+        <div class="foot">
+          <span>${timeAgo(p.createdAt||0)}</span>
+          <div class="btns">
+            ${isMine && p.type==='recruit' && !confirmed ? `<button class="confirm" data-confirm="${p.id}">✅ 確定成團名單</button>` : ''}
+            ${isMine && p.type==='recruit' && confirmed ? `<button class="confirm" data-confirm="${p.id}">✏️ 編輯名單</button>` : ''}
+
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function renderBoard(){
+    let list = posts.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    if(filterType === 'confirmed') list = list.filter(p=>p.status==='confirmed');
+    else if(filterType !== 'all') list = list.filter(p=>p.type===filterType);
+    if(filterCat !== 'all') list = list.filter(p=>p.category===filterCat);
+
+    if(list.length === 0){
+      boardEl.innerHTML = '';
+      emptyEl.style.display = 'block';
+      emptyEl.textContent = posts.length === 0 ? '公佈欄還空空的，當第一個貼文的人吧！' : '這個篩選條件下還沒有貼文。';
+    } else {
+      emptyEl.style.display = 'none';
+      boardEl.innerHTML = list.map(cardHtml).join('');
+    }
+  }
+
+  // ---------- delegated board events (survive re-renders from realtime updates) ----------
+  boardEl.addEventListener('click', async (e)=>{
+    const confirmBtn = e.target.closest('[data-confirm]');
+    if(confirmBtn){
+      const p = posts.find(x=>x.id===confirmBtn.dataset.confirm);
+      if(p) openConfirmModal(p);
+      return;
+    }
+    const expBtn = e.target.closest('[data-expand]');
+    if(expBtn){
+      const id = expBtn.dataset.expand;
+      if(expandedProfiles.has(id)) expandedProfiles.delete(id); else expandedProfiles.add(id);
+      renderBoard();
+      return;
+    }
+    const ctoggleBtn = e.target.closest('[data-ctoggle]');
+    if(ctoggleBtn){
+      const id = ctoggleBtn.dataset.ctoggle;
+      if(expandedComments.has(id)) expandedComments.delete(id); else expandedComments.add(id);
+      renderBoard();
+      return;
+    }
+    const csendBtn = e.target.closest('[data-csend]');
+    if(csendBtn){ await sendComment(csendBtn.dataset.csend); return; }
+  });
+  boardEl.addEventListener('input', (e)=>{
+    if(e.target.matches('[data-cname]')) draftCName[e.target.dataset.cname] = e.target.value;
+    if(e.target.matches('[data-ctext]')) draftCText[e.target.dataset.ctext] = e.target.value;
+  });
+  boardEl.addEventListener('keydown', (e)=>{
+    if(e.target.matches('[data-ctext]') && e.key === 'Enter'){
+      e.preventDefault();
+      sendComment(e.target.dataset.ctext);
+    }
+  });
+
+  async function sendComment(postId){
+    const text = (draftCText[postId]||'').trim();
+    if(!text) return;
+    if(!db){ toast('目前連不上，稍後再試一次'); return; }
+    const name = (draftCName[postId]||'').trim();
+    try{
+      await db.collection('comments').add({ postId, name, text, authorId: viewerId||null, createdAt: Date.now() });
+      draftCText[postId] = '';
+      expandedComments.add(postId);
+      renderBoard();
+      const inp = boardEl.querySelector(`[data-ctext="${postId}"]`);
+      if(inp) inp.focus();
+    }catch(err){ toast('留言送出失敗，請再試一次'); }
+  }
+
+  // ---------- post modal ----------
+  function openModal(){
+    let type = 'recruit';
+    let category = CATS[0];
+    let tagList = [];
+
+    const root = document.getElementById('modalRoot');
+    root.innerHTML = `
+      <div class="overlay" id="ovl">
+        <div class="sheet">
+          <div class="sheet-wrap">
+            <button class="close-x" id="closeX">✕</button>
+            <h2>張貼一則</h2>
+            <p class="sub">寫清楚一點，大家才找得到你。</p>
+            <div class="field">
+              <label>這是哪一種貼文？</label>
+              <div class="toggle-row">
+                <button type="button" class="active" data-t="recruit">🔎 找夥伴</button>
+                <button type="button" data-t="profile">🙋 秀自己</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>表演類別</label>
+              <div class="cat-pick" id="catPick"></div>
+            </div>
+            <div class="field" id="diffField">
+              <label>難度（不一定要選）</label>
+              <select id="fDiff">
+                <option value="">不指定</option>
+                ${DIFFS.map(d=>`<option value="${d}">${d}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field">
+              <label>標題</label>
+              <input type="text" id="fTitle" maxlength="60">
+            </div>
+            <div class="field">
+              <label>你的稱呼／暱稱</label>
+              <input type="text" id="fName" maxlength="30" placeholder="例如：資工三 阿凱">
+            </div>
+            <div class="field">
+              <label>聯絡方式</label>
+              <input type="text" id="fContact" maxlength="60" placeholder="IG / LINE ID 都可以">
+            </div>
+            <div class="field">
+              <label id="tagLabel">還缺的角色</label>
+              <div class="tagbox" id="tagBox">
+                <input type="text" id="fTagInput" placeholder="輸入後按 Enter">
+              </div>
+              <div class="hint">例如：貝斯手、鼓手、主唱⋯一次一個，按 Enter 加入</div>
+            </div>
+            <div class="field">
+              <label>補充說明</label>
+              <textarea id="fDesc" maxlength="400" placeholder="想開什麼歌、排練時間、經驗要求⋯都可以寫在這"></textarea>
+            </div>
+            <div class="err" id="fErr"></div>
+            <button class="submit-btn" id="fSubmit">貼上公佈欄</button>
+          </div>
+        </div>
+      </div>`;
+
+    function paintTypeLabels(){
+      document.getElementById('fTitle').placeholder = type==='recruit'
+        ? '例如：找貝斯手一起玩告五人的歌' : '例如：彈吉他三年，想加入樂團';
+      document.getElementById('tagLabel').textContent = type==='recruit' ? '還缺的角色' : '你的技能／樂器';
+      document.getElementById('fTagInput').placeholder = type==='recruit' ? '例如：鼓手（按 Enter 或 換行 才會加入）' : '例如：吉他（按 Enter 或 換行 才會 加入）';
+      document.getElementById('fSubmit').textContent = type==='recruit' ? '貼出徵人啟事' : '貼出自我介紹';
+      const diffField = document.getElementById('diffField');
+      if(type === 'recruit'){ diffField.style.display = 'block'; }
+      else { diffField.style.display = 'none'; document.getElementById('fDiff').value = ''; }
+    }
+
+    root.querySelectorAll('.toggle-row button').forEach(b=>{
+      b.onclick = ()=>{
+        type = b.dataset.t;
+        root.querySelectorAll('.toggle-row button').forEach(x=>x.classList.toggle('active', x===b));
+        paintTypeLabels();
+      };
+    });
+
+    const catPick = document.getElementById('catPick');
+    catPick.innerHTML = CATS.map(c=>`<button type="button" class="${c===category?'on '+c:''}" data-c="${c}">${c}</button>`).join('');
+    catPick.querySelectorAll('button').forEach(b=>{
+      b.onclick = ()=>{
+        category = b.dataset.c;
+        catPick.querySelectorAll('button').forEach(x=>{ x.className = x.dataset.c===category ? ('on '+x.dataset.c) : ''; });
+      };
+    });
+
+    function renderTags(){
+      const box = document.getElementById('tagBox');
+      const input = document.getElementById('fTagInput');
+      box.querySelectorAll('.tag').forEach(t=>t.remove());
+      tagList.forEach((t,i)=>{
+        const el = document.createElement('span');
+        el.className = 'tag';
+        el.innerHTML = `${escapeHtml(t)} <button type="button" data-i="${i}">✕</button>`;
+        box.insertBefore(el, input);
+      });
+      box.querySelectorAll('.tag button').forEach(b=>{
+        b.onclick = ()=>{ tagList.splice(+b.dataset.i,1); renderTags(); };
+      });
+    }
+    document.getElementById('fTagInput').addEventListener('keydown', (e)=>{
+      if((e.key==='Enter'||e.key===',') && e.target.value.trim()){
+        e.preventDefault();
+        tagList.push(e.target.value.trim());
+        e.target.value = '';
+        renderTags();
+      }
+    });
+
+    paintTypeLabels();
+    document.getElementById('closeX').onclick = closeModal;
+    document.getElementById('ovl').addEventListener('click', (e)=>{ if(e.target.id==='ovl') closeModal(); });
+
+    document.getElementById('fSubmit').onclick = async ()=>{
+      const title = document.getElementById('fTitle').value.trim();
+      const name = document.getElementById('fName').value.trim();
+      const contact = document.getElementById('fContact').value.trim();
+      const desc = document.getElementById('fDesc').value.trim();
+      const difficulty = type === 'recruit' ? document.getElementById('fDiff').value : '';
+      const errEl = document.getElementById('fErr');
+      if(!title || !name || !contact){ errEl.textContent = '標題、稱呼、聯絡方式都要填喔'; return; }
+      if(!db){ errEl.textContent = '目前連不上公佈欄，稍後再試一次'; return; }
+      const btn = document.getElementById('fSubmit');
+      btn.disabled = true; btn.textContent = '張貼中…';
+      try{
+        await db.collection('posts').add({
+          type, category, title, name, contact, difficulty,
+          description: desc, tags: tagList, status: 'open',
+          authorId: viewerId || null, createdAt: Date.now(),
+        });
+        closeModal();
+        toast('🎉 已貼上公佈欄！');
+      }catch(err){
+        console.error('張貼失敗：', err);
+        errEl.textContent = '張貼失敗，請再試一次';
+        btn.disabled = false; paintTypeLabels();
+      }
+    };
+  }
+  function closeModal(){ document.getElementById('modalRoot').innerHTML = ''; }
+  document.getElementById('fabBtn').onclick = openModal;
+
+  // ---------- confirm roster modal ----------
+  function openConfirmModal(post){
+    let rows = (post.roster && post.roster.length)
+      ? post.roster.map(r=>({role:r.role||'', name:r.name||''}))
+      : (post.tags||[]).map(t=>({role:t, name:''}));
+    if(rows.length === 0) rows = [{role:'', name:''}];
+
+    const root = document.getElementById('modalRoot');
+    function paint(){
+      root.innerHTML = `
+        <div class="overlay" id="cOvl">
+          <div class="sheet">
+            <div class="sheet-wrap">
+              <button class="close-x" id="cClose">✕</button>
+              <h2>確定成團名單</h2>
+              <p class="sub">名單送出後，大家都會在這則貼文上看到最終陣容和內容。</p>
+              <div class="field">
+                <label>成員名單</label>
+                <div id="rosterRows"></div>
+                <button type="button" class="add-row-btn" id="addRow">＋ 新增一列</button>
+              </div>
+              <div class="field">
+                <label>最終演出內容（選填）</label>
+                <textarea id="cNote" maxlength="400" placeholder="例如：最終確定演出曲目、時間">${escapeHtml(post.finalNote || post.description || '')}</textarea>
+              </div>
+              <div class="err" id="cErr"></div>
+              <button class="submit-btn alt" id="cSubmit">確定並公開名單</button>
+            </div>
+          </div>
+        </div>`;
+      const rowsEl = document.getElementById('rosterRows');
+      rowsEl.innerHTML = rows.map((r,i)=>`
+        <div class="roster-row">
+          <input type="text" placeholder="角色（例如：貝斯手）" value="${escapeHtml(r.role)}" data-role="${i}">
+          <input type="text" placeholder="姓名／暱稱" value="${escapeHtml(r.name)}" data-name="${i}">
+          <button type="button" data-rm="${i}">✕</button>
+        </div>`).join('');
+      rowsEl.querySelectorAll('[data-role]').forEach(inp=>{ inp.oninput = ()=>{ rows[+inp.dataset.role].role = inp.value; }; });
+      rowsEl.querySelectorAll('[data-name]').forEach(inp=>{ inp.oninput = ()=>{ rows[+inp.dataset.name].name = inp.value; }; });
+      rowsEl.querySelectorAll('[data-rm]').forEach(btn=>{
+        btn.onclick = ()=>{ rows.splice(+btn.dataset.rm,1); if(rows.length===0) rows.push({role:'',name:''}); paint(); };
+      });
+      document.getElementById('addRow').onclick = ()=>{ rows.push({role:'',name:''}); paint(); };
+      document.getElementById('cClose').onclick = closeModal;
+      document.getElementById('cOvl').addEventListener('click',(e)=>{ if(e.target.id==='cOvl') closeModal(); });
+      document.getElementById('cSubmit').onclick = async ()=>{
+        const cleaned = rows.map(r=>({role:r.role.trim(), name:r.name.trim()})).filter(r=>r.name || r.role);
+        const errEl = document.getElementById('cErr');
+        if(cleaned.filter(r=>r.name).length === 0){ errEl.textContent = '至少填一位成員的姓名／暱稱'; return; }
+        if(!db){ errEl.textContent = '目前連不上公佈欄，稍後再試一次'; return; }
+        const btn = document.getElementById('cSubmit');
+        btn.disabled = true; btn.textContent = '送出中…';
+        try{
+          await db.collection('posts').doc(post.id).update({
+            status:'confirmed', roster:cleaned,
+            finalNote: document.getElementById('cNote').value.trim(),
+            confirmedAt: Date.now(),
+          });
+          closeModal();
+          toast('🎉 名單已公開！');
+        }catch(err){
+          errEl.textContent = '送出失敗，請再試一次';
+          btn.disabled = false; btn.textContent = '確定並公開名單';
+        }
+      };
+    }
+    paint();
+  }
+
+  // ---------- subscribe modal ----------
+  function openSubscribeModal(){
+    const root = document.getElementById('modalRoot');
+    root.innerHTML = `
+      <div class="overlay" id="sOvl">
+        <div class="sheet">
+          <div class="sheet-wrap">
+            <button class="close-x" id="sClose">✕</button>
+            <h2>訂閱通知</h2>
+            <p class="sub">留下 email，之後有新的徵人貼文時通知你。</p>
+            <div class="field">
+              <label>電子信箱</label>
+              <input type="email" id="sEmail" placeholder="you@example.com">
+            </div>
+            <div class="field checkrow">
+              <input type="checkbox" id="sNotify" checked>
+              <label for="sNotify" style="margin:0;">有新的徵人文上架時通知我</label>
+            </div>
+            <div class="err" id="sErr"></div>
+            <button class="submit-btn" id="sSubmit">完成訂閱</button>
+          </div>
+        </div>
+      </div>`;
+    document.getElementById('sClose').onclick = closeModal;
+    document.getElementById('sOvl').addEventListener('click',(e)=>{ if(e.target.id==='sOvl') closeModal(); });
+    document.getElementById('sSubmit').onclick = async ()=>{
+      const email = document.getElementById('sEmail').value.trim();
+      const notify = document.getElementById('sNotify').checked;
+      const errEl = document.getElementById('sErr');
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ errEl.textContent = '請輸入正確的電子信箱'; return; }
+      if(!db){ errEl.textContent = '目前連不上，稍後再試一次'; return; }
+      const btn = document.getElementById('sSubmit');
+      btn.disabled = true; btn.textContent = '送出中…';
+      try{
+        await db.collection('subscribers').doc(sanitizeId(email)).set({ email, notify, updatedAt: Date.now() });
+        closeModal();
+        toast('✅ 訂閱完成！');
+      }catch(err){
+        errEl.textContent = '送出失敗，請再試一次';
+        btn.disabled = false; btn.textContent = '完成訂閱';
+      }
+    };
+  }
+  subBtn.onclick = openSubscribeModal;
+
+  // ---------- feedback modal ----------
+  function openFeedbackModal(){
+    const root = document.getElementById('modalRoot');
+    root.innerHTML = `
+      <div class="overlay" id="fOvl">
+        <div class="sheet">
+          <div class="sheet-wrap">
+            <button class="close-x" id="fbClose">✕</button>
+            <h2>留下回饋</h2>
+            <p class="sub">試用版還在調整，想到什麼都可以說，會直接整理進後台給我看。</p>
+            <div class="field">
+              <label>回饋內容</label>
+              <textarea id="fbText" maxlength="500" placeholder="哪裡不好用？希望多什麼功能？"></textarea>
+            </div>
+            <div class="field">
+              <label>聯絡方式（選填）</label>
+              <input type="text" id="fbContact" placeholder="方便的話留一下，我們可能會回覆你">
+            </div>
+            <div class="err" id="fbErr"></div>
+            <button class="submit-btn" id="fbSubmit">送出回饋</button>
+          </div>
+        </div>
+      </div>`;
+    document.getElementById('fbClose').onclick = closeModal;
+    document.getElementById('fOvl').addEventListener('click',(e)=>{ if(e.target.id==='fOvl') closeModal(); });
+    document.getElementById('fbSubmit').onclick = async ()=>{
+      const text = document.getElementById('fbText').value.trim();
+      const contact = document.getElementById('fbContact').value.trim();
+      const errEl = document.getElementById('fbErr');
+      if(!text){ errEl.textContent = '寫點什麼再送出吧'; return; }
+      if(!db){ errEl.textContent = '目前連不上，稍後再試一次'; return; }
+      const btn = document.getElementById('fbSubmit');
+      btn.disabled = true; btn.textContent = '送出中…';
+      try{
+        await db.collection('feedback').add({ text, contact, createdAt: Date.now() });
+        closeModal();
+        toast('🙏 已收到你的回饋！');
+      }catch(err){
+        errEl.textContent = '送出失敗，請再試一次';
+        btn.disabled = false; btn.textContent = '送出回饋';
+      }
+    };
+  }
+  document.getElementById('fbOpenBtn').onclick = openFeedbackModal;
+
+  // ---------- admin auth ----------
+  function openAdminAuth(){
+    const root = document.getElementById('modalRoot');
+    root.innerHTML = `
+      <div class="overlay" id="apOvl">
+        <div class="sheet" style="max-width:380px;">
+          <div class="sheet-wrap">
+            <button class="close-x" id="apClose">✕</button>
+            <h2>後台授權</h2>
+            <p class="sub">請輸入授權碼才能進入後台。</p>
+            <div class="field">
+              <input type="text" id="apCode" placeholder="授權碼" autocomplete="off">
+            </div>
+            <div class="err" id="apErr"></div>
+            <button class="submit-btn" id="apSubmit">進入後台</button>
+          </div>
+        </div>
+      </div>`;
+    document.getElementById('apClose').onclick = closeModal;
+    document.getElementById('apOvl').addEventListener('click',(e)=>{ if(e.target.id==='apOvl') closeModal(); });
+    const doSubmit = ()=>{
+      const code = document.getElementById('apCode').value;
+      if(code === ADMIN_CODE){
+        adminUnlocked = true;
+        try{ localStorage.setItem('ib19_admin_ok','1'); }catch(e){}
+        closeModal();
+        openAdmin();
+      } else {
+        document.getElementById('apErr').textContent = '授權碼錯誤';
+      }
+    };
+    document.getElementById('apSubmit').onclick = doSubmit;
+    document.getElementById('apCode').addEventListener('keydown',(e)=>{ if(e.key==='Enter') doSubmit(); });
+  }
+  adminBtn.onclick = ()=>{ if(adminUnlocked){ openAdmin(); } else { openAdminAuth(); } };
+
+  // ---------- admin ----------
+  function openAdmin(){
+    const root = document.getElementById('adminRoot');
+    const list = posts.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    const recruitCount = list.filter(p=>p.type==='recruit').length;
+    const profileCount = list.filter(p=>p.type==='profile').length;
+    const confirmedList = list.filter(p=>p.status==='confirmed');
+    const optedSubs = subscribers.filter(s=>s.notify);
+    const maxCat = Math.max(1, ...CATS.map(c=>list.filter(p=>p.category===c).length));
+
+    root.innerHTML = `
+      <div class="admin-overlay" id="aOvl">
+        <div class="admin-inner">
+          <div class="admin-head">
+            <h2>後台</h2>
+            <div class="head-btns">
+              <button class="admin-logout" id="aLogout">登出後台</button>
+              <button class="admin-close" id="aClose">回到公佈欄</button>
+            </div>
+          </div>
+
+          <div class="admin-box">
+            <p><b>試用模式：</b>目前${trialMode ? '「開啟」，公告欄會顯示試用版標語與回饋按鈕' : '「關閉」，已是正式版樣貌'}。正式上線前可以先把試用期間的貼文清空。</p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="mini-btn ${trialMode?'on':''}" id="toggleTrial">${trialMode ? '✅ 試用模式中（點此切換為正式版）' : '目前為正式版（點此切回試用模式）'}</button>
+              <button class="mini-btn warn" id="clearPosts">🧹 清空所有貼文（正式上線用）</button>
+            </div>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat-card"><div class="n">${list.length}</div><div class="l">總貼文數</div></div>
+            <div class="stat-card"><div class="n">${recruitCount}</div><div class="l">找夥伴</div></div>
+            <div class="stat-card"><div class="n">${profileCount}</div><div class="l">秀自己</div></div>
+            <div class="stat-card"><div class="n">${confirmedList.length}</div><div class="l">已成團</div></div>
+            <div class="stat-card"><div class="n">${optedSubs.length}</div><div class="l">訂閱通知人數</div></div>
+            <div class="stat-card"><div class="n">${comments.length}</div><div class="l">總留言數</div></div>
+          </div>
+
+          <div class="section-title">各類別分布</div>
+          ${CATS.map(c=>{
+            const n = list.filter(p=>p.category===c).length;
+            const pct = Math.round(n/maxCat*100);
+            return `<div class="bar-row"><div class="label">${c}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${CAT_COLOR[c]}"></div></div><div>${n}</div></div>`;
+          }).join('')}
+
+          <div class="section-title">已成團名單 <button class="mini-btn" id="expTeams">匯出成 CSV</button></div>
+          <div class="scrollx">
+          <table class="admin-table">
+            <thead><tr><th>類別</th><th>標題</th><th>發起人</th><th>聯絡方式</th><th>成員名單</th><th>內容</th><th>確定時間</th></tr></thead>
+            <tbody>
+              ${confirmedList.length===0 ? `<tr><td colspan="7" style="color:var(--ink-soft);">目前還沒有已成團的表演</td></tr>` : confirmedList.map(p=>`
+                <tr>
+                  <td>${escapeHtml(p.category)}</td><td>${escapeHtml(p.title)}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.contact)}</td>
+                  <td>${(p.roster||[]).map(r=>escapeHtml((r.role?r.role+'：':'')+r.name)).join('、')}</td>
+                  <td>${escapeHtml(p.finalNote||'')}</td>
+                  <td>${p.confirmedAt ? new Date(p.confirmedAt).toLocaleString('zh-TW') : ''}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+          </div>
+
+          <div class="section-title">訂閱通知名單 <button class="mini-btn" id="expSubs">匯出成 CSV</button></div>
+          <div class="scrollx">
+          <table class="admin-table">
+            <thead><tr><th>Email</th><th>希望收到通知</th><th>建立／更新時間</th></tr></thead>
+            <tbody>
+              ${subscribers.length===0 ? `<tr><td colspan="3" style="color:var(--ink-soft);">目前還沒有人訂閱</td></tr>` : subscribers.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).map(s=>`
+                <tr><td>${escapeHtml(s.email)}</td><td>${s.notify?'是':'否'}</td><td>${s.updatedAt?new Date(s.updatedAt).toLocaleString('zh-TW'):''}</td></tr>`).join('')}
+            </tbody>
+          </table>
+          </div>
+
+          <div class="section-title">使用回饋（${feedbacks.length}）</div>
+          <div class="admin-box">
+            ${feedbacks.length===0 ? '<p style="color:var(--ink-soft);">目前還沒有回饋</p>' : feedbacks.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).map(f=>`
+              <div class="fb-item">${escapeHtml(f.text)}<div class="meta">${f.contact?escapeHtml(f.contact)+'・':''}${f.createdAt?new Date(f.createdAt).toLocaleString('zh-TW'):''}</div></div>`).join('')}
+          </div>
+
+          <div class="section-title">全部貼文明細</div>
+          <div class="scrollx">
+          <table class="admin-table">
+            <thead><tr><th>狀態</th><th>類型</th><th>類別</th><th>難度</th><th>標題</th><th>發起人</th><th>聯絡方式</th><th>角色／技能</th><th>留言數</th><th>張貼時間</th><th></th></tr></thead>
+            <tbody>
+              ${list.length===0 ? `<tr><td colspan="11" style="color:var(--ink-soft);">目前還沒有任何貼文</td></tr>` : list.map(p=>`
+                <tr>
+                  <td>${p.status==='confirmed'?'已成團':'開放中'}</td>
+                  <td>${p.type==='recruit'?'找夥伴':'秀自己'}</td>
+                  <td>${escapeHtml(p.category)}</td>
+                  <td>${escapeHtml(p.difficulty||'')}</td>
+                  <td>${escapeHtml(p.title)}</td>
+                  <td>${escapeHtml(p.name)}</td>
+                  <td>${escapeHtml(p.contact)}</td>
+                  <td>${(p.tags||[]).map(escapeHtml).join('、')}</td>
+                  <td>${comments.filter(c=>c.postId===p.id).length}</td>
+                  <td>${new Date(p.createdAt||0).toLocaleString('zh-TW')}</td>
+                  <td><button class="del-btn" data-id="${p.id}">刪除</button></td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+          </div>
+        </div>
+      </div>`;
+
+    document.getElementById('aClose').onclick = ()=>{ root.innerHTML=''; };
+    document.getElementById('aLogout').onclick = ()=>{
+      adminUnlocked = false;
+      try{ localStorage.removeItem('ib19_admin_ok'); }catch(e){}
+      root.innerHTML = '';
+    };
+    document.getElementById('toggleTrial').onclick = ()=>{
+      trialMode = !trialMode;
+      try{ localStorage.setItem('trialMode', JSON.stringify(trialMode)); }catch(err){}
+      renderBanner();
+      openAdmin();
+    };
+    document.getElementById('clearPosts').onclick = async ()=>{
+      if(!db) return;
+      const ok = await customConfirm('確定要清空所有貼文嗎？這個動作無法復原，通常在正式上線前使用。');
+      if(!ok) return;
+      try{
+        const snap = await db.collection('posts').get();
+        for(const d of snap.docs){ await db.collection('posts').doc(d.id).delete(); }
+        toast('已清空所有貼文');
+        openAdmin();
+      }catch(err){ toast('清空失敗，請再試一次'); }
+    };
+    document.getElementById('expTeams').onclick = ()=>{
+      exportCSV('已成團名單.csv', ['類別','標題','發起人','聯絡方式','成員名單','內容','確定時間'],
+        confirmedList.map(p=>[p.category,p.title,p.name,p.contact,(p.roster||[]).map(r=>(r.role?r.role+'：':'')+r.name).join('、'),p.finalNote||'',p.confirmedAt?new Date(p.confirmedAt).toLocaleString('zh-TW'):'']));
+    };
+    document.getElementById('expSubs').onclick = ()=>{
+      exportCSV('訂閱名單.csv', ['Email','希望收到通知','更新時間'],
+        subscribers.map(s=>[s.email, s.notify?'是':'否', s.updatedAt?new Date(s.updatedAt).toLocaleString('zh-TW'):'']));
+    };
+    root.querySelectorAll('.del-btn').forEach(b=>{
+      b.onclick = async ()=>{
+        if(!db) return;
+        const ok = await customConfirm('確定要刪除這則貼文嗎？此動作無法復原。');
+        if(!ok) return;
+        try{ await db.collection('posts').doc(b.dataset.id).delete(); openAdmin(); }catch(err){ toast('刪除失敗，請再試一次'); }
+      };
+    });
+  }
+
+  // ---------- init ----------
+  renderFilters();
+  renderBoard();
+  renderBanner();
+
+// 替換後的初始化程式碼
+  (function init(){
+    // 建立一個轉接器；若瀏覽器禁止 localStorage，改用本次頁面生命週期的記憶體資料。
+    const memoryStore = {};
+    function readStore(colName){
+      try{
+        const raw = localStorage.getItem(colName);
+        const value = raw ? JSON.parse(raw) : (memoryStore[colName] || []);
+        return Array.isArray(value) ? value : [];
+      }catch(err){
+        if(!Array.isArray(memoryStore[colName])) memoryStore[colName] = [];
+        return memoryStore[colName].slice();
+      }
+    }
+    function writeStore(colName, value){
+      const safeValue = Array.isArray(value) ? value : [];
+      memoryStore[colName] = safeValue.slice();
+      try{ localStorage.setItem(colName, JSON.stringify(safeValue)); }catch(err){
+        console.warn('localStorage 不可用，改用暫存資料：', err);
+      }
+    }
+
+    db = {
+      collection: function(colName) {
+        return {
+          add: async function(data) {
+            const newId = Date.now().toString() + '_' + Math.random().toString(36).slice(2, 8);
+            const doc = Object.assign({ id: newId }, data);
+            let arr = readStore(colName);
+            arr.push(doc);
+            writeStore(colName, arr);
+            triggerUpdate();
+
+            if(
+              typeof google !== 'undefined' &&
+              google.script &&
+              google.script.run &&
+              typeof google.script.run.addPostToSheet === 'function' &&
+              colName === 'posts'
+            ){
+              try{
+                google.script.run
+                  .withFailureHandler(err => console.error('同步試算表失敗：', err))
+                  .addPostToSheet(doc);
+              }catch(err){
+                console.warn('試算表同步略過：', err);
+              }
+            }
+            return { id: newId };
+          },
+          get: async function() {
+            const arr = readStore(colName);
+            return {
+              docs: arr.map(item => ({ id: item.id, data: () => item }))
+            };
+          },
+          doc: function(id) {
+            return {
+              set: async function(data) {
+                let arr = readStore(colName);
+                const idx = arr.findIndex(x => x.id === id);
+                const doc = Object.assign({ id }, data);
+                if(idx > -1) arr[idx] = Object.assign({}, arr[idx], data);
+                else arr.push(doc);
+                writeStore(colName, arr);
+                triggerUpdate();
+              },
+              update: async function(data) {
+                let arr = readStore(colName);
+                const idx = arr.findIndex(x => x.id === id);
+                if(idx > -1) {
+                  Object.assign(arr[idx], data);
+                  writeStore(colName, arr);
+                  triggerUpdate();
+                }
+              },
+              delete: async function() {
+                let arr = readStore(colName);
+                arr = arr.filter(x => x.id !== id);
+                writeStore(colName, arr);
+                triggerUpdate();
+              }
+            };
+          }
+        };
+      }
+    };
+
+    // 重新讀取資料並更新畫面
+    function triggerUpdate() {
+      posts = readStore('posts');
+      subscribers = readStore('subscribers');
+      comments = readStore('comments');
+      feedbacks = readStore('feedback');
+      try{ trialMode = JSON.parse(localStorage.getItem('trialMode') || 'true'); }
+      catch(err){ trialMode = true; }
+      
+      // 隱藏錯誤提示，顯示正常公佈欄
+      emptyEl.style.display = 'none';
+      renderBoard();
+      renderBanner();
+    }
+
+    // 網頁一打開就立刻執行一次
+    triggerUpdate();
+  })();
+  
+})();
+</script>
+</body>
+</html>
