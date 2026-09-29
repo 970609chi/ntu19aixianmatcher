@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+TC:wght@400;500;700;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@700;900&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -121,7 +121,7 @@
         text-align: center;
       }
       .logo {
-        font-family: inherit;
+        font-family: "Noto Serif TC", serif;
         font-size: clamp(2.4rem, 6vw, 3.6rem);
         color: var(--paper);
         text-shadow: 2px 3px 0 rgba(0, 0, 0, 0.25);
@@ -905,7 +905,6 @@
         line-height: 1.6;
         font-size: 0.86rem;
       }
-
       .admin-table {
         width: 100%;
         border-collapse: collapse;
@@ -1852,26 +1851,32 @@
               document.getElementById("pwErr").textContent = "請輸入四位數字";
               return;
             }
-            const hash = await hashPassword(pw);
-            let valid = false;
-            if (post.passwordHash) {
-              valid = hash === post.passwordHash;
-            } else if (db.verifyPostPassword) {
-              valid = await db.verifyPostPassword(post.id, hash);
-            } else {
+            try {
+              const hash = await hashPassword(pw);
+              let valid = false;
+              if (post.passwordHash) {
+                valid = hash === post.passwordHash;
+              } else if (db.verifyPostPassword) {
+                valid = await db.verifyPostPassword(post.id, hash);
+              } else {
+                document.getElementById("pwErr").textContent =
+                  "這則貼文沒有可用的密碼驗證資料";
+                return;
+              }
+              if (!valid) {
+                document.getElementById("pwErr").textContent = "密碼錯誤";
+                return;
+              }
+              postSecretHashes.set(post.id, hash);
+              closeModal();
+              unlockedPosts.add(post.id);
+              callback();
+              renderBoard();
+            } catch (e) {
+              console.error("密碼驗證失敗：", e);
               document.getElementById("pwErr").textContent =
-                "這則貼文沒有可用的密碼驗證資料";
-              return;
+                "驗證失敗：請確認 Supabase 密碼函式已執行";
             }
-            if (!valid) {
-              document.getElementById("pwErr").textContent = "密碼錯誤";
-              return;
-            }
-            postSecretHashes.set(post.id, hash);
-            closeModal();
-            unlockedPosts.add(post.id);
-            callback();
-            renderBoard();
           };
           document.getElementById("pwClose").onclick = closeModal;
           document.getElementById("pwOvl").onclick = (e) => {
@@ -1902,10 +1907,15 @@
             };
           document.getElementById("deletePost").onclick = async () => {
             if (confirm("確定刪除這則貼文嗎？")) {
-              await db.collection("posts").doc(post.id).delete();
-              closeModal();
-              toast("貼文已刪除");
-              triggerUpdate();
+              try {
+                await db.collection("posts").doc(post.id).delete();
+                closeModal();
+                toast("貼文已刪除");
+                await triggerUpdate();
+              } catch (e) {
+                console.error("本人刪除失敗：", e);
+                toast("刪除失敗：請確認密碼 RPC 已執行");
+              }
             }
           };
         }
@@ -2119,7 +2129,7 @@
                     openAdmin();
                   } catch (e) {
                     console.error("後台刪除失敗：", e);
-                    toast("刪除失敗：請先執行第三份 SQL");
+                    toast("刪除失敗：請確認管理員刪除 SQL 已執行");
                   }
                 }
               }),
@@ -2451,8 +2461,16 @@
               posts = pSnap.docs.map((d) => d.data());
               const cSnap = await db.collection("comments").get();
               comments = cSnap.docs.map((d) => d.data());
-              const fSnap = await db.collection("feedback").get();
-              feedbacks = fSnap.docs.map((d) => d.data());
+              try {
+                const fSnap = await db.collection("feedback").get();
+                feedbacks = fSnap.docs.map((d) => d.data());
+              } catch (feedbackError) {
+                console.warn(
+                  "回饋資料暫時無法讀取；貼文仍使用 Supabase：",
+                  feedbackError,
+                );
+                feedbacks = [];
+              }
             } else {
               posts = readStoreSafe("posts").map(normalizePost);
               comments = readStoreSafe("comments");
