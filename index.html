@@ -224,7 +224,7 @@
 
 <header>
   <h1 class="logo">愛現大會</h1>
-  <p class="tagline">還不認識也沒關係。缺樂手、缺舞者、缺演員，或是想毛遂自薦——都先貼上來，讓大家看見彼此。</p>
+  <p class="tagline">想開歌、想跳舞、想演戲都可以貼出來！記得先去建立個人資料喔～</p>
 </header>
 
 <div class="filters">
@@ -375,7 +375,7 @@
     function renderSkills(){
       const area=document.getElementById('skillArea');
       if(type==='profile'){
-        area.innerHTML=`${presetButtons(tags)}<div class="tagbox" id="tagBox" style="margin-top:8px"><input type="text" id="fTagInput" placeholder="其他：輸入後按 Enter 新增"></div><div class="hint">可複選預設技能，也可以在「其他」輸入自訂項目。</div>`;
+        area.innerHTML=`${presetButtons(tags)}<div class="tagbox" id="tagBox" style="margin-top:8px"><input type="text" id="fTagInput" placeholder="其他：輸入後按 Enter 或 換行 新增"></div><div class="hint">可複選預設技能，也可以在「其他」輸入自訂項目。</div>`;
       }else{
         area.innerHTML=`<div class="preset-grid" id="rolePresets">${SKILL_PRESETS.map(x=>`<button type="button" class="${roles.some(r=>r.role===x)?'on':''}" data-role-preset="${escapeHtml(x)}">${escapeHtml(x)}</button>`).join('')}</div><div id="roleRows" style="margin-top:8px"></div><button type="button" class="add-row-btn" id="addRole">＋ 新增其他角色</button><div class="hint">預設角色可複選；每個位置預設 1 人，也可以修改數量。</div>`;
         paintRoles();
