@@ -242,6 +242,7 @@
 <div id="adminRoot"></div>
 <div id="confirmRoot"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
   const CATS = ['音樂','戲劇','舞蹈','其他'];
@@ -249,6 +250,10 @@
   const DIFFS = ['極易','易','普通','難','極難'];
   const SKILL_PRESETS = ['主唱','和聲','電吉他','木吉他','貝斯','鼓','鍵盤','Cajon','男舞','女舞','演員'];
   const ADMIN_CODE = 'IB19secret';
+  const SUPABASE_URL = 'https://tsijukpcbtkwwwgaqvrf.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_DH6ib44CEg0a_gaVaToIUg_ks-0WoHN';
+  const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY) || null;
+  const postSecretHashes = new Map();
 
   let posts = [], subscribers = [], feedbacks = [], comments = [];
   let trialMode = true, filterType = 'all', filterCat = 'all';
@@ -403,7 +408,7 @@
   }
   document.getElementById('fabBtn').onclick=()=>openModal();
 
-  function passwordModal(post, callback){const root=document.getElementById('modalRoot');root.innerHTML=`<div class="overlay" id="pwOvl"><div class="sheet" style="max-width:390px"><div class="sheet-wrap"><button class="close-x" id="pwClose">✕</button><h2>確認本人</h2><p class="sub">請輸入發布時設定的四位數密碼。</p><div class="field"><label>四位數密碼</label><input type="password" id="pwInput" inputmode="numeric" maxlength="4" autofocus></div><div class="err" id="pwErr"></div><button class="submit-btn" id="pwSubmit">確認</button></div></div></div>`;const done=async()=>{const pw=document.getElementById('pwInput').value;if(!validPassword(pw)){document.getElementById('pwErr').textContent='請輸入四位數字';return;}if(!post.passwordHash){document.getElementById('pwErr').textContent='這是舊貼文，沒有設定密碼，請重新發布或由管理員處理';return;}if(await hashPassword(pw)!==post.passwordHash){document.getElementById('pwErr').textContent='密碼錯誤';return;}closeModal();unlockedPosts.add(post.id);callback();renderBoard();};document.getElementById('pwClose').onclick=closeModal;document.getElementById('pwOvl').onclick=e=>{if(e.target.id==='pwOvl')closeModal();};document.getElementById('pwSubmit').onclick=done;document.getElementById('pwInput').onkeydown=e=>{if(e.key==='Enter')done();};}
+  function passwordModal(post, callback){const root=document.getElementById('modalRoot');root.innerHTML=`<div class="overlay" id="pwOvl"><div class="sheet" style="max-width:390px"><div class="sheet-wrap"><button class="close-x" id="pwClose">✕</button><h2>確認本人</h2><p class="sub">請輸入發布時設定的四位數密碼。</p><div class="field"><label>四位數密碼</label><input type="password" id="pwInput" inputmode="numeric" maxlength="4" autofocus></div><div class="err" id="pwErr"></div><button class="submit-btn" id="pwSubmit">確認</button></div></div></div>`;const done=async()=>{const pw=document.getElementById('pwInput').value;if(!validPassword(pw)){document.getElementById('pwErr').textContent='請輸入四位數字';return;}const hash=await hashPassword(pw);let valid=false;if(post.passwordHash){valid=hash===post.passwordHash;}else if(db.verifyPostPassword){valid=await db.verifyPostPassword(post.id,hash);}else{document.getElementById('pwErr').textContent='這則貼文沒有可用的密碼驗證資料';return;}if(!valid){document.getElementById('pwErr').textContent='密碼錯誤';return;}postSecretHashes.set(post.id,hash);closeModal();unlockedPosts.add(post.id);callback();renderBoard();};document.getElementById('pwClose').onclick=closeModal;document.getElementById('pwOvl').onclick=e=>{if(e.target.id==='pwOvl')closeModal();};document.getElementById('pwSubmit').onclick=done;document.getElementById('pwInput').onkeydown=e=>{if(e.key==='Enter')done();};}
   async function requestOwnerAction(post){if(!unlockedPosts.has(post.id)){passwordModal(post,()=>ownerActionMenu(post));}else ownerActionMenu(post);}
   function ownerActionMenu(post){const root=document.getElementById('modalRoot');root.innerHTML=`<div class="overlay" id="ownerOvl"><div class="sheet" style="max-width:420px"><div class="sheet-wrap"><button class="close-x" id="ownerClose">✕</button><h2>管理這則貼文</h2><p class="sub">${escapeHtml(displayTitle(post))}</p><button class="submit-btn" id="editPost">✏️ 修改資料</button>${post.type==='recruit'?'<button class="submit-btn alt" id="manageApps" style="margin-top:10px">🙋 管理應徵</button>':''}<button class="mini-btn warn" id="deletePost" style="width:100%;margin-top:10px;padding:11px">刪除貼文</button></div></div></div>`;document.getElementById('ownerClose').onclick=closeModal;document.getElementById('ownerOvl').onclick=e=>{if(e.target.id==='ownerOvl')closeModal();};document.getElementById('editPost').onclick=()=>openModal(post);if(post.type==='recruit')document.getElementById('manageApps').onclick=()=>{closeModal();renderBoard();};document.getElementById('deletePost').onclick=async()=>{if(confirm('確定刪除這則貼文嗎？')){await db.collection('posts').doc(post.id).delete();closeModal();toast('貼文已刪除');triggerUpdate();}};}
 
@@ -437,41 +442,48 @@
   adminBtn.onclick=()=>adminUnlocked?openAdmin():openAdminAuth();
   function openAdmin(){const root=document.getElementById('adminRoot'),list=posts.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)),recruitCount=list.filter(p=>p.type==='recruit').length,profileCount=list.filter(p=>p.type==='profile').length,confirmedList=list.filter(isFullyFilled);root.innerHTML=`<div class="admin-overlay"><div class="admin-inner"><div class="admin-head"><h2>後台</h2><div class="head-btns"><button class="admin-logout" id="aLogout">登出後台</button><button class="admin-close" id="aClose">回到公佈欄</button></div></div><div class="admin-box"><p><b>試用模式：</b>目前${trialMode?'開啟':'關閉'}。</p><button class="mini-btn ${trialMode?'on':''}" id="toggleTrial">切換試用模式</button><button class="mini-btn warn" id="clearPosts">🧹 清空所有貼文</button></div><div class="stat-grid"><div class="stat-card"><div class="n">${list.length}</div><div class="l">總貼文數</div></div><div class="stat-card"><div class="n">${recruitCount}</div><div class="l">找夥伴</div></div><div class="stat-card"><div class="n">${profileCount}</div><div class="l">秀自己</div></div><div class="stat-card"><div class="n">${confirmedList.length}</div><div class="l">已成團</div></div><div class="stat-card"><div class="n">${comments.length}</div><div class="l">總留言數</div></div></div><div class="section-title">全部貼文明細</div><div class="scrollx"><table class="admin-table"><thead><tr><th>狀態</th><th>類型</th><th>類別</th><th>標題／名稱</th><th>聯絡方式</th><th>角色／技能</th><th>應徵數</th><th>張貼時間</th><th></th></tr></thead><tbody>${list.length?list.map(p=>`<tr><td>${isFullyFilled(p)?'已成團':'開放中'}</td><td>${p.type==='recruit'?'找夥伴':'秀自己'}</td><td>${escapeHtml(categoriesOf(p).join('、'))}</td><td>${escapeHtml(displayTitle(p))}</td><td>${escapeHtml(p.contact)}</td><td>${escapeHtml((p.type==='recruit'?rolesOf(p).map(r=>r.role+'×'+r.qty):tagsOf(p)).join('、'))}</td><td>${applicationsOf(p).length}</td><td>${new Date(p.createdAt||0).toLocaleString('zh-TW')}</td><td><button class="del-btn" data-id="${p.id}">刪除</button></td></tr>`).join(''):'<tr><td colspan="9">目前沒有貼文</td></tr>'}</tbody></table></div></div></div>`;document.getElementById('aClose').onclick=()=>root.innerHTML='';document.getElementById('aLogout').onclick=()=>{adminUnlocked=false;try{localStorage.removeItem('ib19_admin_ok')}catch(e){}root.innerHTML='';};document.getElementById('toggleTrial').onclick=()=>{trialMode=!trialMode;try{localStorage.setItem('trialMode',JSON.stringify(trialMode))}catch(e){}renderBanner();openAdmin();};document.getElementById('clearPosts').onclick=async()=>{if(confirm('確定清空所有貼文嗎？')){for(const p of posts.slice())await db.collection('posts').doc(p.id).delete();toast('已清空');openAdmin();}};root.querySelectorAll('.del-btn').forEach(b=>b.onclick=async()=>{if(confirm('確定刪除嗎？')){await db.collection('posts').doc(b.dataset.id).delete();toast('已刪除');openAdmin();}});}
 
-  // Local data adapter for this phase. It will be replaced by Supabase later.
+  // Supabase adapter. If the network is unavailable, the page falls back to localStorage.
   (function init(){
     const memoryStore={};
     function readStore(name){try{const raw=localStorage.getItem(name);const v=raw?JSON.parse(raw):(memoryStore[name]||[]);return Array.isArray(v)?v:[];}catch(e){return Array.isArray(memoryStore[name])?memoryStore[name].slice():[];}}
     function writeStore(name,value){memoryStore[name]=value.slice();try{localStorage.setItem(name,JSON.stringify(value));}catch(e){}}
-    db={
-      collection(name){
-        return {
-          add: async data=>{
-            const id=Date.now()+'_'+Math.random().toString(36).slice(2,8);
-            const doc=Object.assign({id},data);
-            const a=readStore(name); a.push(doc); writeStore(name,a);
-            return {id};
-          },
-          get: async()=>({docs:readStore(name).map(x=>({id:x.id,data:()=>x}))}),
-          doc(id){
-            return {
-              set: async data=>{
-                let a=readStore(name), i=a.findIndex(x=>x.id===id);
-                if(i<0) a.push(Object.assign({id},data)); else a[i]=Object.assign({},a[i],data);
-                writeStore(name,a);
-              },
-              update: async data=>{
-                let a=readStore(name), i=a.findIndex(x=>x.id===id);
-                if(i>=0){ a[i]=Object.assign({},a[i],data); writeStore(name,a); }
-              },
-              delete: async()=>{ writeStore(name,readStore(name).filter(x=>x.id!==id)); }
-            };
-          }
-        };
-      }
-    };
+    const remote = !!supabaseClient;
+    const localAdapter={
+      collection(name){return {add:async data=>{const id=Date.now()+'_'+Math.random().toString(36).slice(2,8);const doc=Object.assign({id},data);const a=readStore(name);a.push(doc);writeStore(name,a);return {id};},get:async()=>({docs:readStore(name).map(x=>({id:x.id,data:()=>x}))}),doc(id){return {set:async data=>{let a=readStore(name),i=a.findIndex(x=>x.id===id);if(i<0)a.push(Object.assign({id},data));else a[i]=Object.assign({},a[i],data);writeStore(name,a);},update:async data=>{let a=readStore(name),i=a.findIndex(x=>x.id===id);if(i>=0){a[i]=Object.assign({},a[i],data);writeStore(name,a);}},delete:async()=>{writeStore(name,readStore(name).filter(x=>x.id!==id));}};}}},verifyPostPassword:async(id,hash)=>{const p=readStore('posts').find(x=>x.id===id);return !!p&&p.passwordHash===hash;}};
+    function toDbPost(data){return {id:data.id,type:data.type,categories:data.categories||[],category:data.category||'',title:data.title||'',name:data.name||'',contact:data.contact||'',difficulty:data.difficulty||'',tags:data.tags||[],roles:data.roles||[],description:data.description||'',refUrl:data.refUrl||'',status:data.status||'open',authorId:data.authorId||null,applications:data.applications||[],roster:data.roster||[],finalNote:data.finalNote||'',createdAt:data.createdAt||Date.now(),updatedAt:data.updatedAt||Date.now()};}
+    function fromDbPost(row){return normalizePost({id:row.id,type:row.type,categories:row.categories||[],category:row.category,title:row.title,name:row.name,contact:row.contact,difficulty:row.difficulty||'',tags:row.tags||[],roles:row.roles||[],description:row.description||'',refUrl:row.ref_url||'',status:row.status||'open',authorId:row.author_id,applications:row.applications||[],roster:row.roster||[],finalNote:row.final_note||'',createdAt:Number(row.created_at||0),updatedAt:Number(row.updated_at||0)});}
+    function fromDbComment(row){return {id:row.id,postId:row.post_id,name:row.name||'',text:row.text||'',authorId:row.author_id,createdAt:Number(row.created_at||0)};}
+    if(remote){
+      db={
+        async verifyPostPassword(id,hash){const {data,error}=await supabaseClient.rpc('verify_post_secret',{p_post_id:id,p_password_hash:hash});if(error)throw error;return data===true;},
+        collection(name){
+          if(name==='posts') return {
+            add:async data=>{const {data:row,error}=await supabaseClient.rpc('create_post_with_secret',{p_post:toDbPost(data),p_password_hash:data.passwordHash||''});if(error)throw error;return {id:row.id};},
+            get:async()=>{const {data,error}=await supabaseClient.from('posts').select('*').order('created_at',{ascending:false});if(error)throw error;return {docs:(data||[]).map(row=>({id:row.id,data:()=>fromDbPost(row)}))};},
+            doc:id=>({
+              update:async data=>{const hash=data.passwordHash||postSecretHashes.get(id)||'';const {error}=await supabaseClient.rpc('update_post_with_secret',{p_post_id:id,p_post:toDbPost(Object.assign({id},data)),p_password_hash:hash});if(error)throw error;},
+              set:async data=>{const hash=data.passwordHash||postSecretHashes.get(id)||'';const {error}=await supabaseClient.rpc('update_post_with_secret',{p_post_id:id,p_post:toDbPost(Object.assign({id},data)),p_password_hash:hash});if(error)throw error;},
+              delete:async()=>{const hash=postSecretHashes.get(id)||'';const {error}=await supabaseClient.rpc('delete_post_with_secret',{p_post_id:id,p_password_hash:hash});if(error)throw error;}
+            })
+          };
+          if(name==='comments') return {add:async data=>{const row={id:data.id||('c_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)),post_id:data.postId,name:data.name||'',text:data.text,author_id:data.authorId||null,created_at:data.createdAt||Date.now()};const {error}=await supabaseClient.from('comments').insert(row);if(error)throw error;return {id:row.id};},get:async()=>{const {data,error}=await supabaseClient.from('comments').select('*').order('created_at',{ascending:true});if(error)throw error;return {docs:(data||[]).map(row=>({id:row.id,data:()=>fromDbComment(row)}))};}};
+          if(name==='feedback') return {add:async data=>{const row={id:'f_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),text:data.text,contact:data.contact||'',created_at:data.createdAt||Date.now()};const {error}=await supabaseClient.from('feedback').insert(row);if(error)throw error;return {id:row.id};},get:async()=>({docs:[]})};
+          return localAdapter.collection(name);
+        }
+      };
+    }else db=localAdapter;
     window.addEventListener('storage',()=>triggerUpdate());
+    if(remote){supabaseClient.channel('aixian-live').on('postgres_changes',{event:'*',schema:'public',table:'posts'},()=>triggerUpdate()).on('postgres_changes',{event:'*',schema:'public',table:'comments'},()=>triggerUpdate()).subscribe();}
   })();
-  function triggerUpdate(){posts=readStoreSafe('posts').map(normalizePost);comments=readStoreSafe('comments');subscribers=readStoreSafe('subscribers');feedbacks=readStoreSafe('feedback');renderFilters();renderBoard();renderBanner();}
+  async function triggerUpdate(){
+    try{
+      if(supabaseClient){
+        const pSnap=await db.collection('posts').get();posts=pSnap.docs.map(d=>d.data());
+        const cSnap=await db.collection('comments').get();comments=cSnap.docs.map(d=>d.data());
+      }else{posts=readStoreSafe('posts').map(normalizePost);comments=readStoreSafe('comments');}
+      subscribers=readStoreSafe('subscribers');feedbacks=readStoreSafe('feedback');renderFilters();renderBoard();renderBanner();
+    }catch(e){console.error('雲端資料讀取失敗，改用本機資料：',e);posts=readStoreSafe('posts').map(normalizePost);comments=readStoreSafe('comments');renderFilters();renderBoard();renderBanner();}
+  }
   function readStoreSafe(name){try{const v=JSON.parse(localStorage.getItem(name)||'[]');return Array.isArray(v)?v:[];}catch(e){return [];}}
   renderFilters();renderBoard();renderBanner();triggerUpdate();
 })();
