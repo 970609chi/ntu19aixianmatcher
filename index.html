@@ -1124,7 +1124,7 @@
     <header>
       <h1 class="logo">愛現大會</h1>
       <p class="tagline">
-        找樂手、找舞團、找演員都可以丟上來! 記得先去發布個人資料哦～
+        找樂手、找舞團、找演員都可以丟上來! 記得先去發布個人資料哦!
       </p>
     </header>
 
@@ -1989,7 +1989,7 @@
 
         function openRules() {
           const root = document.getElementById("rulesRoot");
-          root.innerHTML = `<div class="overlay" id="rulesOvl"><div class="sheet rules-sheet"><div class="sheet-wrap"><button class="close-x" id="rulesClose">✕</button><h2>規則及注意事項</h2><p class="sub">內容位置：搜尋程式碼中的 RULES_CONTENT 即可修改。</p><div class="rules-empty">${escapeHtml(RULES_CONTENT).replace(/\n/g, "<br>")}</div></div></div></div>`;
+          root.innerHTML = `<div class="overlay" id="rulesOvl"><div class="sheet rules-sheet"><div class="sheet-wrap"><button class="close-x" id="rulesClose">✕</button><h2>規則及注意事項</h2><p class="sub">有任何疑問歡迎私訊幹部詢問</p><div class="rules-empty">${escapeHtml(RULES_CONTENT).replace(/\n/g, "<br>")}</div></div></div></div>`;
           document.getElementById("rulesClose").onclick = () =>
             (root.innerHTML = "");
           document.getElementById("rulesOvl").onclick = (e) => {
