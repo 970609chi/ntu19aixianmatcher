@@ -1404,7 +1404,20 @@
         function rolesHtml(p, owner) {
           const roles = rolesOf(p);
           if (!roles.length) return "";
-          return `<div class="role-list"><b>徵求位置</b>${roles
+          const extraRoleNames = [
+            ...new Set(
+              applicationsOf(p)
+                .filter((a) => a.status !== "rejected" && a.role)
+                .map((a) => a.role),
+            ),
+          ].filter((role) => !roles.some((r) => r.role === role));
+          const displayRoles = roles.concat(
+            extraRoleNames.map((role) => ({
+              role,
+              qty: Math.max(1, acceptedForRole(p, role).length),
+            })),
+          );
+          return `<div class="role-list"><b>徵求位置</b>${displayRoles
             .map((r) => {
               const accepted = acceptedForRole(p, r.role);
               const pending = applicationsOf(p).filter(
