@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=LXGW+WenKai+TC&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@700;900&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -121,7 +121,7 @@
         text-align: center;
       }
       .logo {
-        font-family: "LXGW WenKai TC", cursive;
+        font-family: "Noto Serif TC", serif;
         font-size: clamp(2.4rem, 6vw, 3.6rem);
         color: var(--paper);
         text-shadow: 2px 3px 0 rgba(0, 0, 0, 0.25);
@@ -1949,7 +1949,7 @@
               err.textContent = "你已經應徵這個位置了";
               return;
             }
-            const applications = applicationsOf(post).concat({
+            const application = {
               id:
                 "a_" +
                 Date.now() +
@@ -1961,12 +1961,9 @@
               applicantId: viewerId,
               status: "pending",
               createdAt: Date.now(),
-            });
+            };
             try {
-              await db
-                .collection("posts")
-                .doc(post.id)
-                .update({ applications });
+              await db.applyToPost(post.id, application);
               closeModal();
               toast("✅ 已送出應徵");
               triggerUpdate();
@@ -2208,6 +2205,28 @@
                 readStore("posts").filter((x) => x.id !== id),
               );
             },
+            applyToPost: async (id, application) => {
+              const a = readStore("posts");
+              const i = a.findIndex((x) => x.id === id);
+              if (i < 0) throw new Error("post not found");
+              const apps = Array.isArray(a[i].applications)
+                ? a[i].applications
+                : [];
+              if (
+                apps.some(
+                  (x) =>
+                    x.role === application.role &&
+                    x.profileId === application.profileId &&
+                    x.status !== "rejected",
+                )
+              )
+                throw new Error("你已經應徵這個位置了");
+              a[i] = Object.assign({}, a[i], {
+                applications: apps.concat(application),
+                updatedAt: Date.now(),
+              });
+              writeStore("posts", a);
+            },
             verifyPostPassword: async (id, hash) => {
               const p = readStore("posts").find((x) => x.id === id);
               return !!p && p.passwordHash === hash;
@@ -2294,6 +2313,13 @@
                 );
                 if (error) throw error;
                 if (data !== true) throw new Error("admin delete rejected");
+              },
+              async applyToPost(id, application) {
+                const { error } = await supabaseClient.rpc("apply_to_post", {
+                  p_post_id: id,
+                  p_application: application,
+                });
+                if (error) throw error;
               },
               collection(name) {
                 if (name === "posts")
