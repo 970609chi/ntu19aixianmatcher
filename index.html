@@ -1427,14 +1427,14 @@
               const acceptedHtml = accepted
                 .map(
                   (a) =>
-                    `<div class="applicant-item accepted">✅ ${escapeHtml(r.role)}：<b>${escapeHtml(a.profileName || a.name || "未命名")}</b><span class="c-meta">（已確定）</span>${owner || a.applicantId === viewerId ? `<div class="applicant-actions">${owner ? `<button class="reject" data-app-reject="${p.id}" data-app-id="${a.id}" data-app-cancel="1">取消確定</button>` : ""}${a.applicantId === viewerId ? `<button class="reject" data-app-withdraw="${p.id}" data-app-id="${a.id}">撤回應徵</button>` : ""}</div>` : ""}</div>`,
+                    `<div class="applicant-item accepted">✅ ${escapeHtml(r.role)}：<b>${escapeHtml(a.profileName || a.name || "未命名")}</b><span class="c-meta">（已確定）</span>${owner || a.applicantId === viewerId ? `<div class="applicant-actions">${owner ? `<button class="reject" data-app-reject="${p.id}" data-app-id="${a.id}" data-app-cancel="1">取消確定</button>` : ""}${a.applicantId === viewerId ? `<button class="reject" data-app-withdraw="${p.id}" data-app-id="${a.id}">我是本人，我要撤回應徵</button>` : ""}</div>` : ""}</div>`,
                 )
                 .join("");
               const pendingHtml = showPending
                 ? pending
                     .map(
                       (a) =>
-                        `<div class="applicant-item pending">🕒 ${escapeHtml(r.role)}：<b>${escapeHtml(a.profileName || a.name || "未命名")}</b>${owner || a.applicantId === viewerId ? `<div class="applicant-actions">${owner ? `<button class="accept" data-app-accept="${p.id}" data-app-id="${a.id}">確定這位</button><button class="reject" data-app-reject="${p.id}" data-app-id="${a.id}">不錄取</button>` : ""}${a.applicantId === viewerId ? `<button class="reject" data-app-withdraw="${p.id}" data-app-id="${a.id}">撤回應徵</button>` : ""}</div>` : ""}</div>`,
+                        `<div class="applicant-item pending">🕒 ${escapeHtml(r.role)}：<b>${escapeHtml(a.profileName || a.name || "未命名")}</b>${owner || a.applicantId === viewerId ? `<div class="applicant-actions">${owner ? `<button class="accept" data-app-accept="${p.id}" data-app-id="${a.id}">確定這位</button><button class="reject" data-app-reject="${p.id}" data-app-id="${a.id}">不錄取</button>` : ""}${a.applicantId === viewerId ? `<button class="reject" data-app-withdraw="${p.id}" data-app-id="${a.id}">我是本人，我要撤回應徵</button>` : ""}</div>` : ""}</div>`,
                     )
                     .join("")
                 : "";
@@ -2000,13 +2000,27 @@
         }
         async function withdrawApplication(post, appId) {
           const target = applicationsOf(post).find((a) => a.id === appId);
-          if (!target || target.applicantId !== viewerId) {
-            toast("只能撤回自己的應徵");
+          const profile = target
+            ? posts.find(
+                (p) => p.id === target.profileId && p.type === "profile",
+              )
+            : null;
+          if (!target || target.applicantId !== viewerId || !profile) {
+            toast("找不到你的個人資料，無法撤回應徵");
+            return;
+          }
+          if (!unlockedPosts.has(profile.id)) {
+            passwordModal(profile, () => withdrawApplication(post, appId));
             return;
           }
           if (!confirm("確定要撤回這份應徵嗎？")) return;
           try {
-            await db.withdrawApplication(post.id, appId, viewerId);
+            await db.withdrawApplication(
+              post.id,
+              appId,
+              profile.id,
+              postSecretHashes.get(profile.id) || "",
+            );
             toast("已撤回應徵");
             await triggerUpdate();
           } catch (e) {
@@ -2286,7 +2300,7 @@
               });
               writeStore("posts", a);
             },
-            withdrawApplication: async (id, appId, applicantId) => {
+            withdrawApplication: async (id, appId, profileId, hash) => {
               const a = readStore("posts");
               const i = a.findIndex((x) => x.id === id);
               if (i < 0) throw new Error("post not found");
@@ -2294,8 +2308,16 @@
                 ? a[i].applications
                 : [];
               const target = apps.find((x) => x.id === appId);
-              if (!target || target.applicantId !== applicantId)
-                throw new Error("只能撤回自己的應徵");
+              const profile = readStore("posts").find(
+                (x) => x.id === profileId && x.type === "profile",
+              );
+              if (
+                !target ||
+                target.profileId !== profileId ||
+                !profile ||
+                profile.passwordHash !== hash
+              )
+                throw new Error("個人資料密碼錯誤");
               a[i] = Object.assign({}, a[i], {
                 applications: apps.filter((x) => x.id !== appId),
                 updatedAt: Date.now(),
@@ -2396,13 +2418,14 @@
                 });
                 if (error) throw error;
               },
-              async withdrawApplication(id, appId, applicantId) {
+              async withdrawApplication(id, appId, profileId, hash) {
                 const { error } = await supabaseClient.rpc(
                   "withdraw_application",
                   {
                     p_post_id: id,
                     p_application_id: appId,
-                    p_applicant_id: applicantId,
+                    p_profile_id: profileId,
+                    p_password_hash: hash,
                   },
                 );
                 if (error) throw error;
