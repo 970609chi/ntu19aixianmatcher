@@ -1427,14 +1427,14 @@
               const acceptedHtml = accepted
                 .map(
                   (a) =>
-                    `<div class="applicant-item accepted">✅ ${escapeHtml(r.role)}：<b>${escapeHtml(a.profileName || a.name || "未命名")}</b><span class="c-meta">（已確定）</span>${owner ? `<div class="applicant-actions"><button class="reject" data-app-reject="${p.id}" data-app-id="${a.id}" data-app-cancel="1">取消確定</button></div>` : ""}</div>`,
+                    `<div class="applicant-item accepted">✅ ${escapeHtml(r.role)}：<b>${escapeHtml(a.profileName || a.name || "未命名")}</b><span class="c-meta">（已確定）</span>${owner || a.applicantId === viewerId ? `<div class="applicant-actions">${owner ? `<button class="reject" data-app-reject="${p.id}" data-app-id="${a.id}" data-app-cancel="1">取消確定</button>` : ""}${a.applicantId === viewerId ? `<button class="reject" data-app-withdraw="${p.id}" data-app-id="${a.id}">撤回應徵</button>` : ""}</div>` : ""}</div>`,
                 )
                 .join("");
               const pendingHtml = showPending
                 ? pending
                     .map(
                       (a) =>
-                        `<div class="applicant-item pending">🕒 ${escapeHtml(r.role)}：<b>${escapeHtml(a.profileName || a.name || "未命名")}</b>${owner ? `<div class="applicant-actions"><button class="accept" data-app-accept="${p.id}" data-app-id="${a.id}">確定這位</button><button class="reject" data-app-reject="${p.id}" data-app-id="${a.id}">不錄取</button></div>` : ""}</div>`,
+                        `<div class="applicant-item pending">🕒 ${escapeHtml(r.role)}：<b>${escapeHtml(a.profileName || a.name || "未命名")}</b>${owner || a.applicantId === viewerId ? `<div class="applicant-actions">${owner ? `<button class="accept" data-app-accept="${p.id}" data-app-id="${a.id}">確定這位</button><button class="reject" data-app-reject="${p.id}" data-app-id="${a.id}">不錄取</button>` : ""}${a.applicantId === viewerId ? `<button class="reject" data-app-withdraw="${p.id}" data-app-id="${a.id}">撤回應徵</button>` : ""}</div>` : ""}</div>`,
                     )
                     .join("")
                 : "";
@@ -1530,6 +1530,12 @@
           if (accept) {
             const p = posts.find((x) => x.id === accept.dataset.appAccept);
             if (p) changeApplication(p, accept.dataset.appId, "accepted");
+            return;
+          }
+          const withdraw = e.target.closest("[data-app-withdraw]");
+          if (withdraw) {
+            const p = posts.find((x) => x.id === withdraw.dataset.appWithdraw);
+            if (p) withdrawApplication(p, withdraw.dataset.appId);
             return;
           }
           const reject = e.target.closest("[data-app-reject]");
@@ -1992,6 +1998,23 @@
             }
           };
         }
+        async function withdrawApplication(post, appId) {
+          const target = applicationsOf(post).find((a) => a.id === appId);
+          if (!target || target.applicantId !== viewerId) {
+            toast("只能撤回自己的應徵");
+            return;
+          }
+          if (!confirm("確定要撤回這份應徵嗎？")) return;
+          try {
+            await db.withdrawApplication(post.id, appId, viewerId);
+            toast("已撤回應徵");
+            await triggerUpdate();
+          } catch (e) {
+            console.error("撤回應徵失敗：", e);
+            toast("撤回失敗：" + (e.message || "請稍後再試"));
+          }
+        }
+
         async function changeApplication(post, appId, status) {
           if (!unlockedPosts.has(post.id)) {
             passwordModal(post, () => changeApplication(post, appId, status));
@@ -2263,6 +2286,22 @@
               });
               writeStore("posts", a);
             },
+            withdrawApplication: async (id, appId, applicantId) => {
+              const a = readStore("posts");
+              const i = a.findIndex((x) => x.id === id);
+              if (i < 0) throw new Error("post not found");
+              const apps = Array.isArray(a[i].applications)
+                ? a[i].applications
+                : [];
+              const target = apps.find((x) => x.id === appId);
+              if (!target || target.applicantId !== applicantId)
+                throw new Error("只能撤回自己的應徵");
+              a[i] = Object.assign({}, a[i], {
+                applications: apps.filter((x) => x.id !== appId),
+                updatedAt: Date.now(),
+              });
+              writeStore("posts", a);
+            },
             verifyPostPassword: async (id, hash) => {
               const p = readStore("posts").find((x) => x.id === id);
               return !!p && p.passwordHash === hash;
@@ -2355,6 +2394,17 @@
                   p_post_id: id,
                   p_application: application,
                 });
+                if (error) throw error;
+              },
+              async withdrawApplication(id, appId, applicantId) {
+                const { error } = await supabaseClient.rpc(
+                  "withdraw_application",
+                  {
+                    p_post_id: id,
+                    p_application_id: appId,
+                    p_applicant_id: applicantId,
+                  },
+                );
                 if (error) throw error;
               },
               collection(name) {
