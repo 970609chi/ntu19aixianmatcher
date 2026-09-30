@@ -2352,11 +2352,16 @@
                       update: async (data) => {
                         const hash =
                           data.passwordHash || postSecretHashes.get(id) || "";
+                        const current = posts.find((x) => x.id === id) || {
+                          id,
+                        };
                         const { error } = await supabaseClient.rpc(
                           "update_post_with_secret",
                           {
                             p_post_id: id,
-                            p_post: toDbPost(Object.assign({ id }, data)),
+                            p_post: toDbPost(
+                              Object.assign({}, current, data, { id }),
+                            ),
                             p_password_hash: hash,
                           },
                         );
@@ -2365,11 +2370,16 @@
                       set: async (data) => {
                         const hash =
                           data.passwordHash || postSecretHashes.get(id) || "";
+                        const current = posts.find((x) => x.id === id) || {
+                          id,
+                        };
                         const { error } = await supabaseClient.rpc(
                           "update_post_with_secret",
                           {
                             p_post_id: id,
-                            p_post: toDbPost(Object.assign({ id }, data)),
+                            p_post: toDbPost(
+                              Object.assign({}, current, data, { id }),
+                            ),
                             p_password_hash: hash,
                           },
                         );
