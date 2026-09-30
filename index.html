@@ -244,6 +244,25 @@
         }
       }
       @media (max-width: 560px) {
+        header {
+          padding-top: 96px;
+        }
+        .top-btn {
+          padding: 8px 11px;
+          font-size: 0.74rem;
+        }
+        #fbOpenBtn {
+          left: 10px;
+          top: 12px;
+        }
+        #rulesBtn {
+          left: 10px;
+          top: 52px;
+        }
+        #adminBtn {
+          right: 10px;
+          top: 12px;
+        }
         .board {
           columns: 1;
           padding: 0 16px;
@@ -1355,9 +1374,10 @@
           positionTopButtons();
         }
         function positionTopButtons() {
-          adminBtn.style.top = "16px";
-          fbOpenBtn.style.top = "16px";
-          rulesBtn.style.top = "16px";
+          const mobile = window.innerWidth <= 560;
+          adminBtn.style.top = mobile ? "12px" : "16px";
+          fbOpenBtn.style.top = mobile ? "12px" : "16px";
+          rulesBtn.style.top = mobile ? "52px" : "16px";
         }
         window.addEventListener("resize", positionTopButtons);
 
