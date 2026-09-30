@@ -1414,7 +1414,7 @@
               const acceptedHtml = accepted
                 .map(
                   (a) =>
-                    `<div class="applicant-item accepted">✅ ${escapeHtml(r.role)}：<b>${escapeHtml(a.profileName || a.name || "未命名")}</b><span class="c-meta">（已確定）</span>${owner ? `<div class="applicant-actions"><button class="reject" data-app-reject="${p.id}" data-app-id="${a.id}">取消確定</button></div>` : ""}</div>`,
+                    `<div class="applicant-item accepted">✅ ${escapeHtml(r.role)}：<b>${escapeHtml(a.profileName || a.name || "未命名")}</b><span class="c-meta">（已確定）</span>${owner ? `<div class="applicant-actions"><button class="reject" data-app-reject="${p.id}" data-app-id="${a.id}" data-app-cancel="1">取消確定</button></div>` : ""}</div>`,
                 )
                 .join("");
               const pendingHtml = showPending
@@ -1522,7 +1522,14 @@
           const reject = e.target.closest("[data-app-reject]");
           if (reject) {
             const p = posts.find((x) => x.id === reject.dataset.appReject);
-            if (p) changeApplication(p, reject.dataset.appId, "rejected");
+            if (p)
+              changeApplication(
+                p,
+                reject.dataset.appId,
+                reject.dataset.appCancel === "1"
+                  ? "cancel_accepted"
+                  : "rejected",
+              );
             return;
           }
         });
@@ -1977,9 +1984,25 @@
             passwordModal(post, () => changeApplication(post, appId, status));
             return;
           }
-          const apps = applicationsOf(post).map((a) =>
-            a.id === appId ? Object.assign({}, a, { status }) : a,
-          );
+          const apps = applicationsOf(post).map((a) => {
+            if (a.id !== appId) return a;
+            if (status === "accepted") {
+              return Object.assign({}, a, {
+                status: "accepted",
+                previousStatus: a.status || "pending",
+              });
+            }
+            if (status === "cancel_accepted") {
+              const restored = Object.assign({}, a, {
+                status: a.previousStatus || "pending",
+              });
+              delete restored.previousStatus;
+              return restored;
+            }
+            const rejected = Object.assign({}, a, { status: "rejected" });
+            delete rejected.previousStatus;
+            return rejected;
+          });
           const p = posts.find((x) => x.id === post.id);
           const next = Object.assign({}, p, { applications: apps });
           const roles = rolesOf(next);
